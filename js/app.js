@@ -7,10 +7,14 @@
  * Author URI:      https://github.com/kevinpagtakhan
  **/
 
-var scoreBoard = document.querySelectorAll(".score");
+var scoreBoard = document.querySelectorAll(".score"); // get every element with class = score in index.html 
 
+// mainState object functions like main function
 var mainState = {
+    
+    // get/load every game resource like image, audio, etc. in preload function
     preload: function(){
+        
         // Map sprites
         game.load.image('ground', 'assets/ground.png');
         game.load.image('grass', 'assets/grass.png');
@@ -34,9 +38,11 @@ var mainState = {
         game.load.image('next-round', 'assets/next-round.png');
         game.load.image('start-game', 'assets/start-game.png');
         game.load.image('play-again', 'assets/play-again.png');
+        
         // Power up sprites
         game.load.image('boots', 'assets/boots.png');
         game.load.image('star', 'assets/star.png');
+        
         // Audio clip sprites
         game.load.audio('bomb-sound', 'assets/bomb-sound.wav');
         game.load.audio('power-up', 'assets/power-up.wav');
@@ -49,15 +55,15 @@ var mainState = {
     },
 
     create: function(){
-        this.BLOCK_COUNT = 15;
-        this.PIXEL_SIZE = GAME_SIZE / this.BLOCK_COUNT;
+        this.BLOCK_COUNT = 15; // BLOCK_LENGTH
+        this.PIXEL_SIZE = GAME_SIZE / this.BLOCK_COUNT; // get PIXEL_SIZE -> here 600/15 = 40, because every image element has pixel size of 40
 
-        music = game.add.audio('bg-music', 1, true);
-        music.play();
+        music = game.add.audio('bg-music', 1, true); // get background music
+        music.play(); // play background music
 
-        game.stage.backgroundColor = "#49311C";
+        game.stage.backgroundColor = "#49311C"; // not really necessary cause the background is visible for like 0.1 sec
         game.physics.startSystem(Phaser.Physics.ARCADE);
-        game.world.enableBody = true;
+        game.world.enableBody = true; // all sprites created by the game object will have physics body enabled
 
         // Adds ground to entire map
         for (var x = 0; x < 15; x++) {
@@ -69,15 +75,15 @@ var mainState = {
         // Group container of game sprites
         this.grassList = game.add.group();
         this.wallList = game.add.group();
-        this.bootList = game.add.group();
-        this.starList = game.add.group();
+        this.bootList = game.add.group(); // boot for speedUp
+        this.starList = game.add.group(); // start for explosion powerUp
         this.brickList = game.add.group();
-        this.bombList = game.add.group();
-        this.bombList_2 = game.add.group();
-        this.flagList = game.add.group();
+        this.bombList = game.add.group(); // for player 1
+        this.bombList_2 = game.add.group(); // for player 2
+        this.flagList = game.add.group(); // add player's flags
         this.addPlayers();
-        this.explosionList = game.add.group();
-        this.explosionList_2 = game.add.group();
+        this.explosionList = game.add.group(); // for player 1
+        this.explosionList_2 = game.add.group(); // for player 2
 
 
         // Adds walls, bricks and powerups
@@ -103,7 +109,7 @@ var mainState = {
         this.cursor = game.input.keyboard.createCursorKeys();
         this.enterKey = game.input.keyboard.addKey(Phaser.Keyboard.ENTER);
 
-        // Creates game feedback message
+        // Creates game feedback message and game message styles which will be used in game.add.text
         this.gameMessage = "";
         this.messageStyle = { font: "60px Arcade", fill: "#FFFFFF", boundsAlignV: "middle", boundsAlignH: "center", align: "center", wordWrapWidth: 600};
         this.infoStyle = { font: "30px Arcade", fill: "#FFFFFF", boundsAlignV: "middle", boundsAlignH: "center", align: "center", wordWrapWidth: 600};
@@ -116,18 +122,20 @@ var mainState = {
         gameStart = game.add.audio('game-start');
         roundEnd = game.add.audio('round-end');
 
-        // Shows splash screen
+        // Shows splash screen with game instruction
         if(!gameInPlay){
             this.showRoundWinner(null);
         }
     },
 
+    // game update loop
     update: function(){
-
+        
+        // keyboard input handler - player 2
         if (this.cursor.down.isDown || this.cursor.up.isDown || this.cursor.right.isDown || this.cursor.left.isDown){
             if (this.cursor.left.isDown){
-                this.player.body.velocity.x = -(this.playerSpeed);
-                this.player.loadTexture('bomber-left', 0);
+                this.player.body.velocity.x = -(this.playerSpeed); // player move left
+                this.player.loadTexture('bomber-left', 0); // show player left sprite
             }
             if (this.cursor.right.isDown){
                 this.player.body.velocity.x = (this.playerSpeed);
@@ -146,11 +154,12 @@ var mainState = {
             this.player.body.velocity.y = 0;
         }
 
-        if (this.enterKey.justUp){
-            if(gameInPlay)
-                this.dropBomb(1);
+        if (this.enterKey.justUp){ // if enter key is pressed
+            if(gameInPlay) // and if game is running
+                this.dropBomb(1); // dropBomb(playerNumber)
         }
-
+        
+        // keyboard input handler - player 1
         if (this.aKey.isDown || this.sKey.isDown || this.dKey.isDown || this.wKey.isDown){
             if (this.aKey.isDown){
                 this.player_2.body.velocity.x = -(this.playerSpeed_2);
@@ -219,6 +228,7 @@ var mainState = {
                 } else if(x < 4 && y < 4 || x > 10 && y > 10){
                     this.addGrass(x, y);
                 } else {
+                    // add bricks -> need to be changed if players are added
                     if(Math.floor(Math.random() * 3)){
                         this.addBrick(x, y);
                         if(Math.floor(Math.random() * 1.02)){
@@ -368,7 +378,8 @@ var mainState = {
 
     detonateBomb: function(player, x, y, explosionList, wallList, brickList){
         bombSound.play();
-
+        
+        // explosion power is limited -> need to be changed
         var fire = [
             game.add.sprite(x, y, 'explosion'),
             game.add.sprite(x, y + 40, 'explosion'),
@@ -529,7 +540,8 @@ var mainState = {
             this.restartGame();
         }, this);
     },
-
+    
+    // initial start & restart
     restartGame: function(){
         gameInPlay = true;
         music.stop();
