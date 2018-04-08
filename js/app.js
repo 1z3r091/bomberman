@@ -213,3 +213,390 @@ var mainState = {
         game.physics.arcade.overlap(this.player, this.starList, function(){this.starUp(1);}, null, this);
         game.physics.arcade.overlap(this.player_2, this.starList, function(){this.starUp(2);}, null, this);
     },
+
+    createMap: function(){
+        for (var x = 0; x < 15; x++) {
+            for (var y = 0; y < 15; y++) {
+                
+                // this if statement is not necessary
+                // because the flag positions are defined in the functions
+                if( x == 1 && x == y){
+                    this.addBlueFlag();
+                    this.addRedFlag();
+                }
+                
+                // if you change the game size,
+                // you need to expand the walls here too
+                if (x === 0 || y === 0 || x == 14 || y == 14){
+                    this.addWall(x, y);
+                }
+                
+                // if x and y are even numbers, create walls
+                // you can make a new map changing the position of the walls here
+                else if(x % 2 === 0 && y % 2 === 0){
+                    this.addWall(x, y);
+                } 
+                
+                // fill the player start position with grass with 3x3 size
+                else if(x < 4 && y < 4 || x > 10 && y > 10){
+                    this.addGrass(x, y);
+                } 
+                
+                // fill the rest ground randomly with bricks
+                else {
+                    
+                    // add bricks -> need to be changed if players are added
+                    if(Math.floor(Math.random() * 3)){
+                        this.addBrick(x, y);
+                        
+                        // add speedUp and powerUp items randomly
+                        if(Math.floor(Math.random() * 1.02)){
+                            this.addBoots(x, y);
+                        }
+                        if(Math.floor(Math.random() * 1.02)){
+                            this.addStar(x, y);
+                        }
+                    } 
+                    
+                    // fill the unfilled grounds with grass
+                    else {
+                        this.addGrass(x, y);
+                    }
+                }
+            }
+        }
+    },
+    
+    
+    // if player overlap with explosion
+    burn: function(player){
+        if(player == 1){ // if player 1 is hit
+            this.player.kill(); // kill sprite
+        } else {
+            this.player_2.kill();
+        }
+
+        if(gameInPlay){
+            var score = Number(scoreBoard[player - 1].innerText); // change scoreBoard string into number
+            scoreBoard[player - 1].innerText = score + 1; // increase score
+
+            // if score reached 5, show who win the game
+            if(score + 1 === 5){
+                this.showGameWinner(player);
+                winner.play();
+            } 
+            
+            // else show who win the round
+            else {
+                this.showRoundWinner(player);
+                roundEnd.play();
+            }
+        }
+
+        gameInPlay = false;
+    },
+
+    // if player overlap with enemy's flag
+    getFlag: function(player){
+
+        if(gameInPlay){
+            var score = Number(scoreBoard[player - 1].innerText);
+            scoreBoard[player - 1].innerText = score + 1;
+
+            if(score + 1 === 5){
+                this.showGameWinner(player);
+            } else {
+                this.showRoundWinner(player);
+            }
+        }
+
+        gameInPlay = false;
+    },
+
+    // if player overlap with speedUp item(=boot)
+    speedUp: function(player){
+        powerUp.play();
+
+        if(player == 1){
+            this.playerSpeed = 350;
+        } else {
+            this.playerSpeed_2 = 350;
+        }
+
+        this.bootList.forEach(function(element){
+            element.kill(); // kill boot sprite
+        });
+    },
+
+    addBoots: function(x, y){
+        var boots = game.add.sprite(x * this.PIXEL_SIZE, y * this.PIXEL_SIZE, 'boots');
+        game.physics.arcade.enable(boots);
+        boots.body.immovable = true;
+        this.bootList.add(boots);
+    },
+
+    // if player overlap with star
+    starUp: function(player){
+        powerUp.play();
+
+        if(player == 1){
+            this.playerPower = true;
+        } else {
+            this.playerPower_2 = true;
+        }
+
+        this.starList.forEach(function(element){
+            element.kill();
+        });
+    },
+
+    addStar: function(x, y){
+        var star = game.add.sprite(x * this.PIXEL_SIZE, y * this.PIXEL_SIZE, 'star');
+        game.physics.arcade.enable(star);
+        star.body.immovable = true;
+        this.starList.add(star);
+    },
+
+    // add all players in create function
+    addPlayers: function(){
+
+        this.player = game.add.sprite(GAME_SIZE - 2 * this.PIXEL_SIZE, GAME_SIZE - 2 * this.PIXEL_SIZE, 'bomber');
+        game.physics.arcade.enable(this.player);
+
+        this.player_2 = game.add.sprite(this.PIXEL_SIZE, this.PIXEL_SIZE, 'bomber');
+        game.physics.arcade.enable(this.player_2);
+
+    },
+
+    addBlueFlag: function(){
+        var blueFlag = game.add.sprite(1 * this.PIXEL_SIZE, 1 * this.PIXEL_SIZE, 'blue-flag');
+        game.physics.arcade.enable(blueFlag);
+        blueFlag.body.immovable = true;
+        this.flagList.add(blueFlag);
+
+    },
+
+    addRedFlag: function(){
+        var redFlag = game.add.sprite((this.BLOCK_COUNT - 2) * this.PIXEL_SIZE, (this.BLOCK_COUNT - 2) * this.PIXEL_SIZE, 'red-flag');
+        game.physics.arcade.enable(redFlag);
+        redFlag.body.immovable = true;
+        this.flagList.add(redFlag);
+
+    },
+
+    addWall: function(x, y){
+        var wall = game.add.sprite(x * this.PIXEL_SIZE, y * this.PIXEL_SIZE, 'wall');
+        game.physics.arcade.enable(wall);
+        wall.body.immovable = true;
+        this.wallList.add(wall);
+
+    },
+
+    addBrick: function(x, y){
+        var brick = game.add.sprite(x * this.PIXEL_SIZE, y * this.PIXEL_SIZE, 'brick');
+        game.physics.arcade.enable(brick);
+        brick.body.immovable = true;
+        this.brickList.add(brick);
+
+    },
+
+    addGrass: function(x, y){
+        var grass = game.add.sprite(x * this.PIXEL_SIZE, y * this.PIXEL_SIZE, 'grass');
+        game.physics.arcade.enable(grass);
+        grass.body.immovable = true;
+        this.grassList.add(grass);
+
+    },
+    
+    // bomb explosion
+    detonateBomb: function(player, x, y, explosionList, wallList, brickList){
+        bombSound.play();
+        
+        // explosion power upgrade is limited -> need to be changed
+        var fire = [
+            game.add.sprite(x, y, 'explosion'),
+            game.add.sprite(x, y + 40, 'explosion'),
+            game.add.sprite(x, y - 40, 'explosion'),
+            game.add.sprite(x + 40, y, 'explosion'),
+            game.add.sprite(x - 40, y, 'explosion')
+        ];
+        if(player == 1 && mainState.playerPower){
+            fire.push(game.add.sprite(x, y + 80, 'explosion'));
+            fire.push(game.add.sprite(x, y - 80, 'explosion'));
+            fire.push(game.add.sprite(x + 80, y, 'explosion'));
+            fire.push(game.add.sprite(x - 80, y, 'explosion'));
+        } else if (player == 2 && mainState.playerPower_2) {
+            fire.push(game.add.sprite(x, y + 80, 'explosion'));
+            fire.push(game.add.sprite(x, y - 80, 'explosion'));
+            fire.push(game.add.sprite(x + 80, y, 'explosion'));
+            fire.push(game.add.sprite(x - 80, y, 'explosion'));
+
+        }
+
+        for (var i = 0; i < fire.length; i++) {
+            fire[i].body.immovable = true;
+            explosionList.add(fire[i]);
+        }
+
+        for (i = 0; i < fire.length; i++) {
+            // if explosion overlap with wall
+            if(game.physics.arcade.overlap(fire[i], wallList)){
+                fire[i].kill();
+                
+                // if explosion power is upgraded
+                if(i > 0 && fire[i + 4] !== undefined){
+                    fire[i + 4].kill(); // kill explosion, otherwise the explosion will reach through the wall
+                }
+            }
+        }
+
+        setTimeout(function(){
+            explosionList.forEach(function(element){
+                element.kill();
+            });
+            
+            // if explosion and brick position is equal
+            // create new array temp with brick position
+            var temp = brickList.filter(function(element){
+                for (var i = 0; i < fire.length; i++) {
+                    if(element.x == fire[i].x && element.y == fire[i].y){
+                        return true;
+                    }
+                }
+                return false;
+            });
+
+            // kill bricks overlapped with explosion
+            temp.list.forEach(function(element){
+                element.kill();
+            });
+        }, 1000); // time for showing explosion 
+    },
+
+    dropBomb: function(player){
+        var self = this;
+        var gridX;
+        var gridY;
+        var bomb;
+        var detonateBomb;
+        var explosionList;
+        var wallList;
+        var brickList;
+
+        if(player == 1  && this.playerDrop){
+            this.playerDrop = false;
+            gridX = this.player.x - this.player.x % 40; // bomb x-coordinate
+            gridY = this.player.y - this.player.y % 40; // bomb y-coordinate
+
+            bomb = game.add.sprite(gridX, gridY, 'bomb');
+            game.physics.arcade.enable(bomb);
+            bomb.body.immovable = true;
+            this.bombList.add(bomb);
+
+            // why can't we just using these by calling this.xy?
+            // https://stackoverflow.com/questions/20279484/how-to-access-the-correct-this-inside-a-callback
+            
+            detonateBomb = this.detonateBomb;
+            explosionList = this.explosionList;
+            wallList = this.wallList;
+            brickList = this.brickList;
+
+            setTimeout(function(){
+                bomb.kill();
+                self.detonateBomb(player, bomb.x, bomb.y, explosionList, wallList, brickList);
+                mainState.enablePlayerBomb(1);
+            }, 2000); // time count before explosion
+
+            //setTimeout(this.thisEnableBomb, 2000);
+
+        } else if (player == 2  && this.playerDrop_2){
+            this.playerDrop_2 = false;
+            gridX = this.player_2.x - this.player_2.x % 40;
+            gridY = this.player_2.y - this.player_2.y % 40;
+
+            bomb = game.add.sprite(gridX, gridY, 'bomb');
+            game.physics.arcade.enable(bomb);
+            bomb.body.immovable = true;
+            this.bombList_2.add(bomb);
+
+            detonateBomb = this.detonateBomb;
+            explosionList_2 = this.explosionList_2;
+            wallList = this.wallList;
+            brickList = this.brickList;
+
+            setTimeout(function(){
+                bomb.kill();
+                detonateBomb(player, bomb.x, bomb.y, explosionList_2, wallList, brickList);
+                mainState.enablePlayerBomb(2);
+            }, 2000);
+
+        }
+
+    },
+
+    enablePlayerBomb: function(player){
+        if(player == 1){
+            this.playerDrop = true;
+        } else {
+            this.playerDrop_2 = true;
+        }
+
+    },
+
+    addGround: function(x, y){
+        var wall = game.add.sprite(x * this.PIXEL_SIZE, y * this.PIXEL_SIZE, 'ground');
+        wall.body.immovable = true;
+
+    },
+
+    showRoundWinner: function(player){
+
+        if(player !== null){
+            this.gameMessage = game.add.text(0, 0, "PLAYER " + player + " WINS", this.messageStyle);
+            this.gameMessage.setTextBounds(0, 0, 600, 560);
+            this.button = game.add.button(230, 300, 'next-round');
+        } else{
+            intro.play();
+            this.background = game.add.tileSprite(40, 40, 520, 520, 'grass');
+            var introString = "LET'S PLAY BOMBERMAN" + "\n";
+                introString += "You are in a mission to take control" + "\n";
+                introString += "of you opponents base. Drop bombs" + "\n";
+                introString += "to destroy the walls and navigate" + "\n";
+                introString += "through the field." + "\n";
+
+            this.gameMessage = game.add.text(0, 0, introString, this.infoStyle);
+            this.gameMessage.setTextBounds(0, 0, 600, 560);
+            this.button = game.add.button(230, 350, 'start-game');
+        }
+
+        this.button.onInputUp.add(this.restartGame, this);
+    },
+
+    showGameWinner: function(player){
+
+        this.gameMessage = game.add.text(0, 0, "GAME OVER!\nPLAYER " + player + " WINS", this.messageStyle);
+        this.gameMessage.setTextBounds(0, 0, 600, 560);
+        this.button = game.add.button(230, 350, 'play-again');
+
+        this.button.onInputUp.add(function(){
+            scoreBoard[0].innerText = 0;
+            scoreBoard[1].innerText = 0;
+            this.restartGame();
+        }, this);
+    },
+    
+    // initial start & restart
+    restartGame: function(){
+        gameInPlay = true;
+        music.stop();
+        gameStart.play();
+        game.state.start('main');
+    }
+
+};
+
+var GAME_SIZE = 600;
+var gameInPlay = false;
+var game = new Phaser.Game(GAME_SIZE, GAME_SIZE);
+game.state.add('main', mainState);
+game.state.start('main');
